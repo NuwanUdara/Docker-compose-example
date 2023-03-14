@@ -1,0 +1,9 @@
+**/node_modules/
+**/.git
+**/README.md
+**/LICENSE
+**/.vscode
+**/.gitignore
+**/.Dockerfile2
+node_modules
+*/node_modules

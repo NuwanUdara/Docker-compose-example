@@ -1,0 +1,87 @@
+version: '3'
+
+services:
+  client:
+    build:
+      context: ./clinet
+      dockerfile: Dockerfile
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+    networks:
+      frontendnet:
+        aliases:
+          - frontend
+    links:
+      - server
+  
+  mysql_db:
+    image: mysql:latest
+    command: --init-file /data/application/init.sql | --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: myquo
+      # MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysqlpass
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      - ./init.sql:/data/application/init.sql
+
+    healthcheck:
+            test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+            timeout: 20s
+            retries: 10
+    networks:
+      backendnet:
+        aliases:
+          - backend
+    secrets:
+      - mysqlpass
+            
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+
+    environment:
+      MY_SQL_HOST: ${SQLHOST}
+      MY_SQL_USER: ${SQLUSER}
+      MY_SQL_PASS: ${SQLPASS}
+      MY_SQL_PORT: ${SQLPORT}
+      MY_SQL_DATABSE: ${SQLDATABASE}
+    networks:
+      backendnet:
+        aliases:
+          - backend
+
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - client
+    networks:
+      backendnet:
+        aliases:
+          - backend
+      frontendnet:
+        aliases:
+          - frontend
+    links:
+      - client
+      - server
+
+networks:
+  frontendnet:
+    driver: bridge
+  backendnet:
+    driver: bridge
+
+secrets:
+  mysqlpass:
+    file: ./mypass
