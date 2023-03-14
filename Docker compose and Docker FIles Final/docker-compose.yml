@@ -1,10 +1,11 @@
-version: '3'
+version: "3"
 
 services:
   client:
-    build:
-      context: ./clinet
-      dockerfile: Dockerfile
+    image: nuwanudara/qclient:2.0.0
+    # build:
+    #   context: ./clinet
+    #   dockerfile: Dockerfile
     depends_on:
       mysql_db:
         condition: service_healthy
@@ -14,7 +15,7 @@ services:
           - frontend
     links:
       - server
-  
+
   mysql_db:
     image: mysql:latest
     command: --init-file /data/application/init.sql | --default-authentication-plugin=mysql_native_password
@@ -28,24 +29,24 @@ services:
       - ./init.sql:/data/application/init.sql
 
     healthcheck:
-            test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-            timeout: 20s
-            retries: 10
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
     networks:
       backendnet:
         aliases:
           - backend
     secrets:
       - mysqlpass
-            
+
   server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
+    image: nuwanudara/qserver:2.0.0
+    # build:
+    #   context: ./server
+    #   dockerfile: Dockerfile
     depends_on:
       mysql_db:
         condition: service_healthy
-
     environment:
       MY_SQL_HOST: ${SQLHOST}
       MY_SQL_USER: ${SQLUSER}
