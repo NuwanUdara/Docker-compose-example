@@ -40,7 +40,7 @@ services:
       - mysqlpass
 
   server:
-    image: nuwanudara/qserver:2.0.0
+    image: nuwanudara/qserver:3.0.0
     # build:
     #   context: ./server
     #   dockerfile: Dockerfile
